@@ -11,7 +11,7 @@ warnings.filterwarnings("ignore")
 from dotenv import load_dotenv
 load_dotenv()
 
-GOOGLE_AI_API_KEY = os.getenv("GOOGLE_AI_API_KEY", "")
+GOOGLE_AI_API_KEY = os.getenv("GOOGLE_API_KEY", "")
 
 
 def analyze_damage_image(image_bytes: bytes) -> dict:
@@ -51,7 +51,7 @@ Rules:
         print("[Vision AI] Sending image to Gemini 3.6 Flash...")
 
         response = client.models.generate_content(
-            model="gemini-3.6-flash",
+            model="gemini-1.5-flash",
             contents=[
                 types.Part.from_bytes(data=image_bytes, mime_type="image/jpeg"),
                 prompt
