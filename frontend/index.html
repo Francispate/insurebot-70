@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>InsureBot — AI-Powered Insurance Claims</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/base.css" />
+  <link rel="stylesheet" href="css/components.css" />
+  <link rel="stylesheet" href="css/layout.css" />
+  <link rel="stylesheet" href="css/theme.css" />
+  <style>
+    /* ── Page-level overrides ── */
+    :root {
+      --hero-glow: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(99,102,241,0.18) 0%, transparent 70%);
+    }
+
+    /* Navbar */
+    .navbar {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 2rem; height: 60px;
+      background: rgba(10,10,20,0.72);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(255,255,255,0.07);
+    }
+    [data-theme="light"] .navbar {
+      background: rgba(255,255,255,0.82);
+      border-bottom: 1px solid rgba(0,0,0,0.08);
+    }
+    .navbar-logo {
+      display: flex; align-items: center; gap: 10px;
+      font-family: 'Sora', sans-serif; font-size: 1.15rem; font-weight: 700;
+      color: inherit; text-decoration: none;
+    }
+    .logo-mark {
+      width: 30px; height: 30px; border-radius: 8px;
+      background: linear-gradient(135deg, #6366f1, #22d3ee);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 15px;
+    }
+    .navbar-links {
+      display: flex; align-items: center; gap: 1.5rem;
+    }
+    .navbar-links a {
+      font-size: 0.875rem; font-weight: 500;
+      color: rgba(255,255,255,0.72); text-decoration: none;
+      transition: color 0.15s;
+    }
+    [data-theme="light"] .navbar-links a { color: rgba(20,20,40,0.7); }
+    .navbar-links a:hover { color: #fff; }
+    [data-theme="light"] .navbar-links a:hover { color: #1e1e32; }
+    .navbar-actions { display: flex; align-items: center; gap: 0.75rem; }
+
+    /* Hero */
+    .hero {
+      min-height: 100vh;
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; text-align: center;
+      padding: 6rem 1.5rem 4rem;
+      background: var(--hero-glow);
+    }
+    .hero-eyebrow {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 5px 14px; border-radius: 20px;
+      background: rgba(99,102,241,0.14);
+      border: 1px solid rgba(99,102,241,0.28);
+      font-size: 0.78rem; font-weight: 600; letter-spacing: 0.03em;
+      color: #a5b4fc; margin-bottom: 1.75rem;
+    }
+    [data-theme="light"] .hero-eyebrow {
+      background: rgba(99,102,241,0.08); color: #4f46e5;
+      border-color: rgba(99,102,241,0.22);
+    }
+    .hero-eyebrow .dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: #6366f1; animation: pulse-dot 2s infinite;
+    }
+    @keyframes pulse-dot {
+      0%,100% { opacity: 1; transform: scale(1); }
+      50%      { opacity: 0.5; transform: scale(0.75); }
+    }
+    .hero h1 {
+      font-family: 'Sora', sans-serif;
+      font-size: clamp(2.4rem, 6vw, 4.2rem);
+      font-weight: 800; line-height: 1.1;
+      max-width: 720px; margin: 0 auto 1.25rem;
+    }
+    .hero h1 .gradient-text {
+      background: linear-gradient(90deg, #6366f1, #22d3ee);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero-sub {
+      font-size: clamp(1rem, 2vw, 1.15rem);
+      color: rgba(255,255,255,0.6); max-width: 540px;
+      margin: 0 auto 2.5rem; line-height: 1.7;
+    }
+    [data-theme="light"] .hero-sub { color: rgba(20,20,40,0.6); }
+    .hero-cta { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+    .hero-stats {
+      display: flex; gap: 3rem; justify-content: center;
+      margin-top: 4rem; flex-wrap: wrap;
+    }
+    .hero-stat { text-align: center; }
+    .hero-stat-num {
+      font-family: 'Sora', sans-serif;
+      font-size: 1.9rem; font-weight: 800;
+      background: linear-gradient(90deg, #6366f1, #22d3ee);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero-stat-label {
+      font-size: 0.8rem; color: rgba(255,255,255,0.45); margin-top: 2px;
+    }
+    [data-theme="light"] .hero-stat-label { color: rgba(20,20,40,0.5); }
+
+    /* Section shared */
+    .section { padding: 5rem 1.5rem; }
+    .section-label {
+      font-size: 0.78rem; font-weight: 600; letter-spacing: 0.06em;
+      color: #6366f1; margin-bottom: 0.75rem; text-transform: uppercase;
+    }
+    .section-title {
+      font-family: 'Sora', sans-serif;
+      font-size: clamp(1.6rem, 3vw, 2.4rem); font-weight: 700;
+      max-width: 560px; margin: 0 auto 1rem; text-align: center;
+    }
+    .section-sub {
+      text-align: center; max-width: 480px; margin: 0 auto 3.5rem;
+      color: rgba(255,255,255,0.55); font-size: 0.95rem; line-height: 1.7;
+    }
+    [data-theme="light"] .section-sub { color: rgba(20,20,40,0.55); }
+
+    /* Features grid */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1.25rem; max-width: 960px; margin: 0 auto;
+    }
+    .feature-card {
+      padding: 1.75rem;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 14px;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+    [data-theme="light"] .feature-card {
+      background: rgba(0,0,0,0.03);
+      border-color: rgba(0,0,0,0.08);
+    }
+    .feature-card:hover {
+      border-color: rgba(99,102,241,0.35);
+      transform: translateY(-2px);
+    }
+    .feature-icon {
+      width: 44px; height: 44px; border-radius: 10px; margin-bottom: 1rem;
+      display: flex; align-items: center; justify-content: center; font-size: 20px;
+    }
+    .feature-card h3 {
+      font-size: 1rem; font-weight: 600; margin-bottom: 0.5rem;
+    }
+    .feature-card p {
+      font-size: 0.875rem; color: rgba(255,255,255,0.55); line-height: 1.65;
+    }
+    [data-theme="light"] .feature-card p { color: rgba(20,20,40,0.55); }
+
+    /* How it works */
+    .steps-row {
+      display: flex; gap: 0; max-width: 860px; margin: 0 auto;
+      flex-wrap: wrap; justify-content: center;
+    }
+    .step {
+      flex: 1; min-width: 220px; text-align: center; padding: 1rem 1.5rem;
+      position: relative;
+    }
+    .step:not(:last-child)::after {
+      content: "→";
+      position: absolute; right: -8px; top: 32px;
+      font-size: 1.1rem; color: rgba(99,102,241,0.5);
+    }
+    @media (max-width: 600px) { .step:not(:last-child)::after { display: none; } }
+    .step-num {
+      width: 50px; height: 50px; border-radius: 50%;
+      background: rgba(99,102,241,0.15);
+      border: 2px solid rgba(99,102,241,0.35);
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Sora', sans-serif; font-size: 1.1rem; font-weight: 700;
+      color: #a5b4fc; margin: 0 auto 1rem;
+    }
+    .step h3 { font-size: 0.95rem; font-weight: 600; margin-bottom: 0.4rem; }
+    .step p { font-size: 0.83rem; color: rgba(255,255,255,0.5); line-height: 1.6; }
+    [data-theme="light"] .step p { color: rgba(20,20,40,0.5); }
+
+    /* Claim types */
+    .claim-types-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1rem; max-width: 800px; margin: 0 auto;
+    }
+    .claim-type-card {
+      padding: 1.5rem; border-radius: 14px; text-align: center;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.03);
+      transition: all 0.2s;
+    }
+    [data-theme="light"] .claim-type-card {
+      background: rgba(0,0,0,0.03); border-color: rgba(0,0,0,0.08);
+    }
+    .claim-type-card:hover {
+      background: rgba(99,102,241,0.09);
+      border-color: rgba(99,102,241,0.3);
+      transform: translateY(-3px);
+    }
+    .claim-type-card .ct-icon { font-size: 2.2rem; margin-bottom: 0.75rem; }
+    .claim-type-card h3 { font-size: 0.95rem; font-weight: 600; margin-bottom: 0.35rem; }
+    .claim-type-card p { font-size: 0.8rem; color: rgba(255,255,255,0.5); }
+    [data-theme="light"] .claim-type-card p { color: rgba(20,20,40,0.5); }
+
+    /* CTA banner */
+    .cta-banner {
+      max-width: 680px; margin: 0 auto;
+      text-align: center; padding: 3.5rem 2rem;
+      background: rgba(99,102,241,0.1);
+      border: 1px solid rgba(99,102,241,0.22);
+      border-radius: 20px;
+    }
+    .cta-banner h2 {
+      font-family: 'Sora', sans-serif;
+      font-size: clamp(1.5rem, 3vw, 2rem); font-weight: 700;
+      margin-bottom: 0.75rem;
+    }
+    .cta-banner p {
+      font-size: 0.95rem; color: rgba(255,255,255,0.6);
+      margin-bottom: 2rem; line-height: 1.7;
+    }
+    [data-theme="light"] .cta-banner p { color: rgba(20,20,40,0.6); }
+
+    /* Footer */
+    .footer {
+      padding: 2rem 1.5rem; text-align: center;
+      font-size: 0.8rem; color: rgba(255,255,255,0.3);
+      border-top: 1px solid rgba(255,255,255,0.06);
+    }
+    [data-theme="light"] .footer {
+      color: rgba(20,20,40,0.4);
+      border-top-color: rgba(0,0,0,0.06);
+    }
+    .footer a { color: inherit; text-decoration: none; }
+    .footer a:hover { color: #6366f1; }
+
+    /* Divider */
+    .section-divider {
+      height: 1px; max-width: 860px; margin: 0 auto;
+      background: rgba(255,255,255,0.06);
+    }
+    [data-theme="light"] .section-divider { background: rgba(0,0,0,0.06); }
+
+    /* Button styles (supplement globals) */
+    .btn-primary {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 0.72rem 1.6rem; border-radius: 10px;
+      background: linear-gradient(135deg, #6366f1, #4f46e5);
+      color: #fff; font-weight: 600; font-size: 0.9rem;
+      border: none; cursor: pointer; text-decoration: none;
+      transition: opacity 0.15s, transform 0.15s;
+    }
+    .btn-primary:hover { opacity: 0.88; transform: translateY(-1px); }
+    .btn-ghost {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 0.72rem 1.6rem; border-radius: 10px;
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.18);
+      color: rgba(255,255,255,0.8); font-weight: 500; font-size: 0.9rem;
+      cursor: pointer; text-decoration: none;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    [data-theme="light"] .btn-ghost {
+      border-color: rgba(0,0,0,0.18); color: rgba(20,20,40,0.8);
+    }
+    .btn-ghost:hover {
+      border-color: rgba(99,102,241,0.5);
+      background: rgba(99,102,241,0.08);
+    }
+    .btn-sm {
+      padding: 0.45rem 1rem; font-size: 0.82rem; border-radius: 8px;
+    }
+
+    #theme-toggle {
+      background: transparent; border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 8px; padding: 6px 8px; cursor: pointer;
+      color: rgba(255,255,255,0.7); display: flex; align-items: center;
+      transition: border-color 0.15s;
+    }
+    [data-theme="light"] #theme-toggle {
+      border-color: rgba(0,0,0,0.15); color: rgba(20,20,40,0.7);
+    }
+    #theme-toggle:hover { border-color: #6366f1; }
+  </style>
+</head>
+<body>
+
+  <!-- ── Navbar ── -->
+  <nav class="navbar">
+    <a href="index.html" class="navbar-logo">
+      <span class="logo-mark">🛡</span>
+      InsureBot
+    </a>
+    <div class="navbar-links">
+      <a href="#features">Features</a>
+      <a href="#how-it-works">How it works</a>
+      <a href="#claim-types">Claim types</a>
+    </div>
+    <div class="navbar-actions">
+      <button id="theme-toggle" aria-label="Toggle theme"></button>
+      <!-- Guest links -->
+      <a href="login.html" class="btn-ghost btn-sm" data-auth-guest>Log in</a>
+      <a href="login.html?tab=register" class="btn-primary btn-sm" data-auth-guest>Get started</a>
+      <!-- Auth links -->
+      <a href="dashboard.html" class="btn-primary btn-sm" data-auth-user hidden>Dashboard</a>
+    </div>
+  </nav>
+
+  <!-- ── Hero ── -->
+  <section class="hero">
+    <div class="hero-eyebrow">
+      <span class="dot"></span>
+      AI-powered · Indian Insurance Platform
+    </div>
+    <h1>
+      Claims shouldn't be<br/>
+      <span class="gradient-text">complicated.</span>
+    </h1>
+    <p class="hero-sub">
+      Upload a photo, get an instant damage assessment, fraud check, and settlement prediction — all powered by AI built for Indian insurance.
+    </p>
+    <div class="hero-cta">
+      <a href="login.html?tab=register" class="btn-primary">
+        Start your claim
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      </a>
+      <a href="#how-it-works" class="btn-ghost">See how it works</a>
+    </div>
+    <div class="hero-stats">
+      <div class="hero-stat">
+        <div class="hero-stat-num">4 types</div>
+        <div class="hero-stat-label">of insurance claims</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-num">AI-first</div>
+        <div class="hero-stat-label">damage analysis</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-num">IRDAI</div>
+        <div class="hero-stat-label">regulation aware</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Features ── -->
+  <section class="section" id="features">
+    <div style="text-align:center">
+      <div class="section-label">What InsureBot does</div>
+      <h2 class="section-title">Everything your claim needs, in one place</h2>
+      <p class="section-sub">From damage photo to settlement prediction — no paperwork, no guesswork.</p>
+    </div>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon" style="background:rgba(99,102,241,0.15);">📷</div>
+        <h3>Vision AI Damage Analysis</h3>
+        <p>Upload any damage photo. Gemini Vision identifies claim type, severity, affected parts, and estimated repair cost instantly.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon" style="background:rgba(239,68,68,0.15);">🔍</div>
+        <h3>Fraud Risk Detection</h3>
+        <p>Our ML model scores every claim for fraud indicators before submission — protecting both you and your insurer.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon" style="background:rgba(16,185,129,0.15);">📊</div>
+        <h3>Settlement Prediction</h3>
+        <p>Know before you file. Our gradient-boosting model predicts whether your claim will be fully paid, partial, or rejected.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon" style="background:rgba(245,158,11,0.15);">📄</div>
+        <h3>Policy Analyzer</h3>
+        <p>Upload your policy PDF and get a plain-language breakdown: what's covered, hidden exclusions, dangerous clauses, and an overall rating.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon" style="background:rgba(34,211,238,0.15);">💬</div>
+        <h3>AI Claims Assistant</h3>
+        <p>Chat with an insurance-aware AI trained on IRDAI regulations. Get answers to policy questions, claim procedures, and documents needed.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon" style="background:rgba(167,139,250,0.15);">🧭</div>
+        <h3>Pre-Claim Advisor</h3>
+        <p>Describe what happened before filing. Get a claimability assessment, document checklist, and rejection risks — so you're prepared.</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="section-divider"></div>
+
+  <!-- ── How it works ── -->
+  <section class="section" id="how-it-works">
+    <div style="text-align:center">
+      <div class="section-label">The process</div>
+      <h2 class="section-title">Three steps to a filed claim</h2>
+      <p class="section-sub">No lengthy forms. No back-and-forth. Just upload, review, and submit.</p>
+    </div>
+    <div class="steps-row">
+      <div class="step">
+        <div class="step-num">1</div>
+        <h3>Upload your photo</h3>
+        <p>Take a clear picture of the damage and upload it to InsureBot.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <h3>Review the analysis</h3>
+        <p>AI assesses severity, estimates cost, checks for fraud, and predicts your settlement.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <h3>Save and track</h3>
+        <p>Submit the claim to your dashboard and monitor its status in real time.</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="section-divider"></div>
+
+  <!-- ── Claim Types ── -->
+  <section class="section" id="claim-types">
+    <div style="text-align:center">
+      <div class="section-label">Supported claim types</div>
+      <h2 class="section-title">Built for all major Indian insurance categories</h2>
+      <p class="section-sub">InsureBot handles the four most common personal insurance claim types.</p>
+    </div>
+    <div class="claim-types-grid">
+      <div class="claim-type-card">
+        <div class="ct-icon">🚗</div>
+        <h3>Car Insurance</h3>
+        <p>Accidents, theft, flood damage, third-party liability</p>
+      </div>
+      <div class="claim-type-card">
+        <div class="ct-icon">🏠</div>
+        <h3>Home Insurance</h3>
+        <p>Fire, flood, burglary, structural damage, natural disasters</p>
+      </div>
+      <div class="claim-type-card">
+        <div class="ct-icon">🏥</div>
+        <h3>Health Insurance</h3>
+        <p>Hospitalisation, surgery, daycare procedures, OPD claims</p>
+      </div>
+      <div class="claim-type-card">
+        <div class="ct-icon">💼</div>
+        <h3>Business Insurance</h3>
+        <p>Commercial property, equipment loss, liability claims</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── CTA Banner ── -->
+  <section class="section">
+    <div class="cta-banner">
+      <h2>Your first claim is three minutes away.</h2>
+      <p>Create a free account, upload your damage photo, and let InsureBot handle the rest.</p>
+      <a href="login.html?tab=register" class="btn-primary">
+        Create free account
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      </a>
+    </div>
+  </section>
+
+  
+
+  <div id="toast-container"></div>
+
+  <script src="js/api.js"></script>
+  <script src="js/theme.js"></script>
+  <script>
+    // Show dashboard link if already logged in
+    document.addEventListener("DOMContentLoaded", () => {
+      if (window.API && API.isLoggedIn()) {
+        document.querySelectorAll("[data-auth-guest]").forEach(el => el.hidden = true);
+        document.querySelectorAll("[data-auth-user]").forEach(el => el.hidden = false);
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>InsureBot — Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@600;700;800&display=swap" rel="stylesheet" />
+  <!-- Chart.js — must load before charts.js and admin.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="css/base.css" />
+  <link rel="stylesheet" href="css/components.css" />
+  <link rel="stylesheet" href="css/layout.css" />
+  <link rel="stylesheet" href="css/theme.css" />
+  <style>
+    body { display: flex; min-height: 100vh; }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      width: 220px; flex-shrink: 0;
+      background: rgba(0,0,0,0.35); border-right: 1px solid rgba(255,255,255,0.07);
+      display: flex; flex-direction: column;
+      position: sticky; top: 0; height: 100vh; overflow-y: auto;
+    }
+    [data-theme="light"] .sidebar {
+      background: rgba(255,255,255,0.7); border-right: 1px solid rgba(0,0,0,0.08);
+    }
+    .sidebar-logo {
+      display: flex; align-items: center; gap: 10px;
+      padding: 1.25rem 1.25rem 0.75rem;
+      font-family: 'Sora', sans-serif; font-size: 1rem; font-weight: 700;
+      color: inherit; text-decoration: none;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      margin-bottom: 0.5rem;
+    }
+    [data-theme="light"] .sidebar-logo { border-bottom-color: rgba(0,0,0,0.06); }
+    .logo-mark {
+      width: 28px; height: 28px; border-radius: 7px;
+      background: linear-gradient(135deg, #6366f1, #22d3ee);
+      display: flex; align-items: center; justify-content: center; font-size: 13px;
+    }
+    .sidebar-badge {
+      font-size: 0.62rem; font-weight: 700; padding: 2px 6px;
+      border-radius: 20px; background: rgba(239,68,68,0.2); color: #ef4444;
+      margin-left: 4px;
+    }
+    .sidebar-section {
+      padding: 0.25rem 0.75rem; margin-top: 0.5rem;
+      font-size: 0.68rem; font-weight: 600; letter-spacing: 0.06em;
+      text-transform: uppercase; color: rgba(255,255,255,0.3);
+    }
+    [data-theme="light"] .sidebar-section { color: rgba(20,20,40,0.35); }
+    .sidebar-link {
+      display: flex; align-items: center; gap: 9px;
+      padding: 0.55rem 1rem; border-radius: 8px; margin: 1px 0.5rem;
+      font-size: 0.83rem; font-weight: 500;
+      color: rgba(255,255,255,0.6); text-decoration: none; cursor: pointer;
+      background: none; border: none; width: calc(100% - 1rem); text-align: left;
+      transition: background 0.15s, color 0.15s;
+    }
+    [data-theme="light"] .sidebar-link { color: rgba(20,20,40,0.6); }
+    .sidebar-link:hover, .sidebar-link.active {
+      background: rgba(99,102,241,0.15); color: #a5b4fc;
+    }
+    [data-theme="light"] .sidebar-link:hover,
+    [data-theme="light"] .sidebar-link.active {
+      background: rgba(99,102,241,0.1); color: #4f46e5;
+    }
+    .sidebar-icon { width: 15px; height: 15px; flex-shrink: 0; opacity: 0.75; }
+    .sidebar-footer {
+      margin-top: auto; padding: 1rem;
+      border-top: 1px solid rgba(255,255,255,0.06);
+    }
+    [data-theme="light"] .sidebar-footer { border-top-color: rgba(0,0,0,0.06); }
+    .sidebar-user {
+      display: flex; align-items: center; gap: 8px; margin-bottom: 0.75rem;
+    }
+    .sidebar-avatar {
+      width: 30px; height: 30px; border-radius: 50%;
+      background: linear-gradient(135deg, #6366f1, #22d3ee);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.7rem; font-weight: 700; color: #fff; flex-shrink: 0;
+    }
+    .sidebar-user-name { font-size: 0.8rem; font-weight: 500; }
+    .sidebar-user-role {
+      font-size: 0.7rem; color: rgba(255,255,255,0.4);
+    }
+    [data-theme="light"] .sidebar-user-role { color: rgba(20,20,40,0.4); }
+
+    #theme-toggle {
+      width: 100%; padding: 0.45rem 0.75rem; border-radius: 8px;
+      background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+      color: rgba(255,255,255,0.6); cursor: pointer; font-size: 0.78rem;
+      display: flex; align-items: center; gap: 6px; transition: border-color 0.15s;
+    }
+    [data-theme="light"] #theme-toggle { background: rgba(0,0,0,0.05); border-color: rgba(0,0,0,0.1); color: rgba(20,20,40,0.6); }
+    #theme-toggle:hover { border-color: #6366f1; }
+    .logout-link {
+      display: block; width: 100%; margin-top: 0.5rem; padding: 0.45rem 0.75rem;
+      border-radius: 8px; text-align: center; font-size: 0.78rem;
+      background: none; border: 1px solid rgba(239,68,68,0.2); color: rgba(239,68,68,0.7);
+      cursor: pointer; text-decoration: none; transition: border-color 0.15s, color 0.15s;
+    }
+    .logout-link:hover { border-color: #ef4444; color: #ef4444; }
+
+    /* ── Main content ── */
+    .admin-main {
+      flex: 1; overflow-y: auto; overflow-x: hidden;
+      padding: 2rem 2.5rem 4rem;
+      max-width: 100%;
+    }
+    @media (max-width: 768px) {
+      body { flex-direction: column; }
+      .sidebar { width: 100%; height: auto; position: relative; flex-direction: row; flex-wrap: wrap; }
+      .admin-main { padding: 1.5rem; }
+    }
+
+    /* ── Section ── */
+    .admin-section { margin-bottom: 2.5rem; }
+    .admin-section-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 1.25rem;
+    }
+    .admin-section-title {
+      font-family: 'Sora', sans-serif; font-size: 1rem; font-weight: 700;
+    }
+    .admin-section-title .section-sub {
+      font-family: 'Inter', sans-serif; font-size: 0.78rem;
+      color: rgba(255,255,255,0.4); font-weight: 400; margin-left: 0.5rem;
+    }
+    [data-theme="light"] .admin-section-title .section-sub { color: rgba(20,20,40,0.4); }
+
+    /* ── Refresh button ── */
+    .btn-refresh {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 0.4rem 0.85rem; border-radius: 8px; font-size: 0.78rem; font-weight: 500;
+      background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+      color: rgba(255,255,255,0.6); cursor: pointer; transition: border-color 0.15s;
+    }
+    [data-theme="light"] .btn-refresh { background: rgba(0,0,0,0.04); border-color: rgba(0,0,0,0.1); color: rgba(20,20,40,0.6); }
+    .btn-refresh:hover { border-color: #6366f1; color: inherit; }
+
+    /* ── Stat cards ── */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 1rem; margin-bottom: 2rem;
+    }
+    .stat-card {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px; padding: 1.25rem;
+    }
+    [data-theme="light"] .stat-card { background: rgba(0,0,0,0.025); border-color: rgba(0,0,0,0.08); }
+    .stat-label {
+      font-size: 0.75rem; font-weight: 500; margin-bottom: 0.5rem;
+      color: rgba(255,255,255,0.45); text-transform: uppercase; letter-spacing: 0.04em;
+    }
+    [data-theme="light"] .stat-label { color: rgba(20,20,40,0.45); }
+    .stat-value {
+      font-family: 'Sora', sans-serif; font-size: 2rem; font-weight: 800;
+      line-height: 1;
+    }
+    .stat-card:nth-child(1) .stat-value { color: #a5b4fc; }
+    .stat-card:nth-child(2) .stat-value { color: #22d3ee; }
+    .stat-card:nth-child(3) .stat-value { color: #f59e0b; }
+    .stat-card:nth-child(4) .stat-value { color: #ef4444; }
+
+    /* ── Charts row ── */
+    .charts-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.25rem; margin-bottom: 2.5rem;
+    }
+    @media (max-width: 640px) { .charts-row { grid-template-columns: 1fr; } }
+    .chart-card {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px; padding: 1.25rem;
+    }
+    [data-theme="light"] .chart-card { background: rgba(0,0,0,0.025); border-color: rgba(0,0,0,0.08); }
+    .chart-card-title {
+      font-size: 0.8rem; font-weight: 600; margin-bottom: 1rem;
+      color: rgba(255,255,255,0.6);
+    }
+    [data-theme="light"] .chart-card-title { color: rgba(20,20,40,0.6); }
+    .chart-canvas-wrap { height: 200px; position: relative; }
+
+    /* ── Table ── */
+    .table-wrap { overflow-x: auto; }
+    .data-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+    .data-table th {
+      text-align: left; padding: 0.6rem 0.75rem; font-weight: 600; font-size: 0.73rem;
+      color: rgba(255,255,255,0.45); border-bottom: 1px solid rgba(255,255,255,0.07);
+      white-space: nowrap;
+    }
+    [data-theme="light"] .data-table th { color: rgba(20,20,40,0.45); border-bottom-color: rgba(0,0,0,0.07); }
+    .data-table td {
+      padding: 0.65rem 0.75rem; border-bottom: 1px solid rgba(255,255,255,0.04);
+      vertical-align: middle; white-space: nowrap;
+    }
+    [data-theme="light"] .data-table td { border-bottom-color: rgba(0,0,0,0.04); }
+    .data-table tr:last-child td { border-bottom: none; }
+    .row-self { background: rgba(99,102,241,0.06); }
+    .muted { color: rgba(255,255,255,0.4); font-size: 0.78rem; }
+    [data-theme="light"] .muted { color: rgba(20,20,40,0.4); }
+    .small { font-size: 0.78rem; }
+
+    /* Inline selects */
+    .inline-select {
+      padding: 0.3rem 0.6rem; border-radius: 6px; font-size: 0.78rem;
+      background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.12);
+      color: inherit; cursor: pointer;
+    }
+    [data-theme="light"] .inline-select { background: rgba(0,0,0,0.05); border-color: rgba(0,0,0,0.12); }
+    .inline-select:disabled { opacity: 0.5; cursor: not-allowed; }
+    .status-changed { animation: flash 0.4s ease; }
+    @keyframes flash { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+    /* Badges */
+    .badge {
+      display: inline-block; padding: 2px 8px; border-radius: 20px;
+      font-size: 0.7rem; font-weight: 600;
+    }
+    .badge-pending       { background: rgba(245,158,11,0.18); color: #f59e0b; }
+    .badge-approved      { background: rgba(16,185,129,0.18); color: #10b981; }
+    .badge-rejected      { background: rgba(239,68,68,0.18);  color: #ef4444; }
+    .badge-investigating { background: rgba(99,102,241,0.18); color: #a5b4fc; }
+    .badge-genuine       { background: rgba(16,185,129,0.18); color: #10b981; }
+    .badge-suspicious    { background: rgba(245,158,11,0.18); color: #f59e0b; }
+    .badge-fraud         { background: rgba(239,68,68,0.18);  color: #ef4444; }
+
+    /* Risk bar */
+    .risk-bar {
+      height: 5px; border-radius: 3px;
+      background: rgba(255,255,255,0.1); overflow: hidden;
+    }
+    [data-theme="light"] .risk-bar { background: rgba(0,0,0,0.08); }
+    .risk-bar-fill { height: 100%; border-radius: 3px; }
+    .risk-bar-fill.low    { background: #10b981; }
+    .risk-bar-fill.medium { background: #f59e0b; }
+    .risk-bar-fill.high   { background: #ef4444; }
+
+    /* Alerts */
+    .alert-info {
+      padding: 0.8rem 1rem; border-radius: 9px; font-size: 0.875rem;
+      background: rgba(99,102,241,0.1); border: 1px solid rgba(99,102,241,0.2);
+      color: rgba(255,255,255,0.75);
+    }
+    [data-theme="light"] .alert-info { background: rgba(99,102,241,0.07); color: rgba(20,20,40,0.7); }
+    .alert-danger {
+      padding: 0.8rem 1rem; border-radius: 9px; font-size: 0.875rem;
+      background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.2);
+      color: rgba(255,255,255,0.85);
+    }
+
+    /* Skeleton */
+    .skeleton {
+      background: linear-gradient(90deg, rgba(255,255,255,0.06) 25%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.06) 75%);
+      background-size: 200% 100%; animation: shimmer 1.4s infinite;
+    }
+    [data-theme="light"] .skeleton {
+      background: linear-gradient(90deg, rgba(0,0,0,0.06) 25%, rgba(0,0,0,0.1) 50%, rgba(0,0,0,0.06) 75%);
+      background-size: 200% 100%;
+    }
+    @keyframes shimmer { to { background-position: -200% 0; } }
+    .spinner {
+      display: inline-block; width: 13px; height: 13px;
+      border: 2px solid rgba(255,255,255,0.25); border-top-color: #fff;
+      border-radius: 50%; animation: spin 0.65s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Page heading */
+    .page-heading {
+      margin-bottom: 2rem;
+    }
+    .page-heading h1 {
+      font-family: 'Sora', sans-serif; font-size: 1.5rem; font-weight: 700; margin-bottom: 0.25rem;
+    }
+    .page-heading p { font-size: 0.83rem; color: rgba(255,255,255,0.45); }
+    [data-theme="light"] .page-heading p { color: rgba(20,20,40,0.45); }
+  </style>
+</head>
+<body data-requires-admin>
+
+  <!-- ── Sidebar ── -->
+  <aside class="sidebar">
+    <a href="dashboard.html" class="sidebar-logo">
+      <span class="logo-mark">🛡</span>
+      InsureBot
+      <span class="sidebar-badge">Admin</span>
+    </a>
+
+    <div class="sidebar-section">Overview</div>
+    <button class="sidebar-link active" id="sidebar-stats-link" onclick="scrollToSection('stats-section')">
+      <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+        <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+      </svg>
+      Stats
+    </button>
+
+    <div class="sidebar-section">Management</div>
+    <button class="sidebar-link" onclick="scrollToSection('claims-section')">
+      <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+        <polyline points="14 2 14 8 20 8"/>
+      </svg>
+      Claims
+    </button>
+    <button class="sidebar-link" onclick="scrollToSection('users-section')">
+      <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+        <circle cx="9" cy="7" r="4"/>
+        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+      </svg>
+      Users
+    </button>
+
+    <div class="sidebar-section">Navigation</div>
+    <a href="dashboard.html" class="sidebar-link">
+      <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+        <polyline points="9 22 9 12 15 12 15 22"/>
+      </svg>
+      Dashboard
+    </a>
+    <a href="claim.html" class="sidebar-link">
+      <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+      </svg>
+      New Claim
+    </a>
+
+    <div class="sidebar-footer">
+      <div class="sidebar-user" data-auth-user hidden>
+        <div class="sidebar-avatar" data-auth-initial></div>
+        <div>
+          <div class="sidebar-user-name" data-auth-name></div>
+          <div class="sidebar-user-role">Admin</div>
+        </div>
+      </div>
+      <button id="theme-toggle" aria-label="Toggle theme">
+        <span id="theme-toggle-label">Toggle theme</span>
+      </button>
+      <button class="logout-link" data-auth-logout hidden>Log out</button>
+    </div>
+  </aside>
+
+  <!-- ── Main ── -->
+  <main class="admin-main">
+
+    <div class="page-heading">
+      <h1>Admin Panel</h1>
+      <p>System overview, claims management, and user roles.</p>
+    </div>
+
+    <!-- ── Stats ── -->
+    <div id="stats-section" class="admin-section">
+      <div class="admin-section-header">
+        <div class="admin-section-title">
+          Overview
+          <span class="section-sub">live data</span>
+        </div>
+        <button class="btn-refresh" id="admin-refresh-stats">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+               stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.51"/>
+          </svg>
+          Refresh
+        </button>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Total users</div>
+          <div class="stat-value" id="admin-stat-users">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Total claims</div>
+          <div class="stat-value" id="admin-stat-claims">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Pending</div>
+          <div class="stat-value" id="admin-stat-pending">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">High-risk</div>
+          <div class="stat-value" id="admin-stat-high-risk">—</div>
+        </div>
+      </div>
+
+      <!-- Charts -->
+      <div class="charts-row">
+        <div class="chart-card">
+          <div class="chart-card-title">Claims by type</div>
+          <div class="chart-canvas-wrap">
+            <canvas id="chart-claims-type"></canvas>
+          </div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-card-title">Fraud distribution</div>
+          <div class="chart-canvas-wrap">
+            <canvas id="chart-fraud-dist"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Claims ── -->
+    <div id="claims-section" class="admin-section">
+      <div class="admin-section-header">
+        <div class="admin-section-title">All Claims</div>
+        <button class="btn-refresh" id="admin-refresh-claims">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+               stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.51"/>
+          </svg>
+          Refresh
+        </button>
+      </div>
+      <div id="admin-claims-table">
+        <div class="skeleton" style="height:160px;border-radius:8px"></div>
+      </div>
+    </div>
+
+    <!-- ── Users ── -->
+    <div id="users-section" class="admin-section">
+      <div class="admin-section-header">
+        <div class="admin-section-title">Users</div>
+        <button class="btn-refresh" id="admin-refresh-users">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+               stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.51"/>
+          </svg>
+          Refresh
+        </button>
+      </div>
+      <div id="admin-users-table">
+        <div class="skeleton" style="height:120px;border-radius:8px"></div>
+      </div>
+    </div>
+
+  </main>
+
+  <div id="toast-container"></div>
+
+  <!-- Script order: api → auth → theme → charts → admin -->
+  <script src="js/api.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/theme.js"></script>
+  <script src="js/charts.js"></script>
+  <script src="js/admin.js"></script>
+  <script>
+    // Smooth scroll to section
+    function scrollToSection(id) {
+      document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+      // Update sidebar active state
+      document.querySelectorAll(".sidebar-link").forEach(l => l.classList.remove("active"));
+      event?.currentTarget?.classList.add("active");
+    }
+
+    // Update theme toggle label when theme changes
+    function updateThemeLabel() {
+      const label = document.getElementById("theme-toggle-label");
+      if (!label) return;
+      const isLight = document.documentElement.getAttribute("data-theme") === "light";
+      label.textContent = isLight ? "Switch to dark" : "Switch to light";
+    }
+    document.addEventListener("DOMContentLoaded", updateThemeLabel);
+    new MutationObserver(updateThemeLabel).observe(document.documentElement, {
+      attributes: true, attributeFilter: ["data-theme"]
+    });
+  </script>
+</body>
+</html>

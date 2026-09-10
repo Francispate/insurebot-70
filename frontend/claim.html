@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>InsureBot — Submit Claim</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/base.css" />
+  <link rel="stylesheet" href="css/components.css" />
+  <link rel="stylesheet" href="css/layout.css" />
+  <link rel="stylesheet" href="css/theme.css" />
+  <link rel="stylesheet" href="css/chatbot-widget.css" />
+  <style>
+    body { min-height: 100vh; display: flex; flex-direction: column; }
+
+    /* ── Navbar ── */
+    .navbar {
+      position: sticky; top: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 2rem; height: 60px;
+      background: rgba(10,10,20,0.82); backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(255,255,255,0.07);
+    }
+    [data-theme="light"] .navbar {
+      background: rgba(255,255,255,0.88); border-bottom: 1px solid rgba(0,0,0,0.08);
+    }
+    .navbar-logo {
+      display: flex; align-items: center; gap: 10px;
+      font-family: 'Sora', sans-serif; font-size: 1.1rem; font-weight: 700;
+      color: inherit; text-decoration: none;
+    }
+    .logo-mark {
+      width: 30px; height: 30px; border-radius: 8px;
+      background: linear-gradient(135deg, #6366f1, #22d3ee);
+      display: flex; align-items: center; justify-content: center; font-size: 15px;
+    }
+    .navbar-links { display: flex; align-items: center; gap: 1.25rem; }
+    .navbar-links a {
+      font-size: 0.875rem; font-weight: 500;
+      color: rgba(255,255,255,0.65); text-decoration: none; transition: color 0.15s;
+    }
+    [data-theme="light"] .navbar-links a { color: rgba(20,20,40,0.65); }
+    .navbar-links a:hover { color: #fff; }
+    [data-theme="light"] .navbar-links a:hover { color: #1e1e32; }
+    .navbar-actions { display: flex; align-items: center; gap: 0.75rem; }
+    .navbar-user { display: flex; align-items: center; gap: 8px; font-size: 0.875rem; font-weight: 500; }
+    .navbar-avatar {
+      width: 30px; height: 30px; border-radius: 50%;
+      background: linear-gradient(135deg, #6366f1, #22d3ee);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.7rem; font-weight: 700; color: #fff;
+    }
+    #theme-toggle {
+      background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px; padding: 6px 8px; cursor: pointer;
+      color: rgba(255,255,255,0.6); display: flex; align-items: center;
+    }
+    [data-theme="light"] #theme-toggle { background: rgba(0,0,0,0.05); border-color: rgba(0,0,0,0.12); color: rgba(20,20,40,0.6); }
+    #theme-toggle:hover { border-color: #6366f1; }
+    .logout-link {
+      font-size: 0.83rem; color: rgba(255,255,255,0.45);
+      background: none; border: none; cursor: pointer; padding: 0; text-decoration: none;
+    }
+    [data-theme="light"] .logout-link { color: rgba(20,20,40,0.45); }
+    .logout-link:hover { color: #ef4444; }
+
+    /* ── Page ── */
+    .page-main {
+      flex: 1; max-width: 1100px; width: 100%;
+      margin: 0 auto; padding: 2.5rem 2rem 4rem;
+    }
+    .page-header { margin-bottom: 2rem; }
+    .page-header h1 {
+      font-family: 'Sora', sans-serif; font-size: 1.6rem; font-weight: 700; margin-bottom: 0.3rem;
+    }
+    .page-header p { font-size: 0.875rem; color: rgba(255,255,255,0.5); }
+    [data-theme="light"] .page-header p { color: rgba(20,20,40,0.5); }
+
+    /* ── Tabs (My Claims / New Claim) ── */
+    .page-tabs {
+      display: flex; gap: 4px; margin-bottom: 2rem;
+      background: rgba(0,0,0,0.2); border-radius: 10px;
+      padding: 4px; width: fit-content;
+    }
+    [data-theme="light"] .page-tabs { background: rgba(0,0,0,0.07); }
+    .page-tab {
+      padding: 0.45rem 1rem; border-radius: 7px; border: none;
+      background: transparent; cursor: pointer; font-size: 0.85rem; font-weight: 500;
+      color: rgba(255,255,255,0.5); transition: all 0.15s;
+    }
+    [data-theme="light"] .page-tab { color: rgba(20,20,40,0.5); }
+    .page-tab.active { background: rgba(99,102,241,0.22); color: #a5b4fc; }
+    [data-theme="light"] .page-tab.active { background: rgba(99,102,241,0.12); color: #4f46e5; }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* ── Two-col layout ── */
+    .claim-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      align-items: start;
+    }
+    @media (max-width: 720px) { .claim-grid { grid-template-columns: 1fr; } }
+
+    /* ── Card ── */
+    .card {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 14px; padding: 1.5rem;
+    }
+    [data-theme="light"] .card { background: rgba(0,0,0,0.025); border-color: rgba(0,0,0,0.08); }
+    .card-title {
+      font-size: 0.875rem; font-weight: 600; margin-bottom: 1.25rem;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .card-title .icon {
+      width: 28px; height: 28px; border-radius: 7px;
+      display: flex; align-items: center; justify-content: center; font-size: 13px;
+    }
+
+    /* ── Dropzone ── */
+    .dropzone {
+      border: 2px dashed rgba(255,255,255,0.15); border-radius: 12px;
+      padding: 2rem 1.5rem; text-align: center; cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      position: relative; overflow: hidden;
+    }
+    [data-theme="light"] .dropzone { border-color: rgba(0,0,0,0.15); }
+    .dropzone:hover, .dropzone.dragging {
+      border-color: #6366f1; background: rgba(99,102,241,0.06);
+    }
+    .dropzone input[type="file"] {
+      position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+    }
+    .dropzone-icon { font-size: 2rem; margin-bottom: 0.75rem; }
+    .dropzone-text { font-size: 0.875rem; font-weight: 500; margin-bottom: 4px; }
+    .dropzone-hint { font-size: 0.78rem; color: rgba(255,255,255,0.4); }
+    [data-theme="light"] .dropzone-hint { color: rgba(20,20,40,0.4); }
+    #claim-preview {
+      margin-top: 1rem; display: none;
+      border-radius: 10px; overflow: hidden;
+    }
+    #claim-preview img {
+      width: 100%; max-height: 220px; object-fit: cover; display: block;
+    }
+    #claim-file-name {
+      margin-top: 0.5rem; font-size: 0.78rem; color: rgba(255,255,255,0.5);
+      text-align: center;
+    }
+    [data-theme="light"] #claim-file-name { color: rgba(20,20,40,0.5); }
+
+    /* ── Form controls ── */
+    .form-group { margin-bottom: 1rem; }
+    .form-group label {
+      display: block; font-size: 0.8rem; font-weight: 500;
+      margin-bottom: 0.4rem; color: rgba(255,255,255,0.65);
+    }
+    [data-theme="light"] .form-group label { color: rgba(20,20,40,0.65); }
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%; padding: 0.6rem 0.85rem; border-radius: 9px;
+      background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+      color: inherit; font-size: 0.875rem; font-family: inherit; box-sizing: border-box;
+      transition: border-color 0.15s;
+    }
+    [data-theme="light"] .form-group input,
+    [data-theme="light"] .form-group select,
+    [data-theme="light"] .form-group textarea {
+      background: rgba(0,0,0,0.04); border-color: rgba(0,0,0,0.12);
+    }
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+      outline: none; border-color: #6366f1;
+      box-shadow: 0 0 0 3px rgba(99,102,241,0.12);
+    }
+    .form-group textarea { resize: vertical; min-height: 80px; }
+    .form-row { display: flex; gap: 0.75rem; }
+    .form-row .form-group { flex: 1; }
+
+    /* ── Buttons ── */
+    .btn-primary {
+      width: 100%; padding: 0.7rem; border-radius: 10px;
+      background: linear-gradient(135deg, #6366f1, #4f46e5);
+      border: none; color: #fff; font-size: 0.92rem; font-weight: 600;
+      cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;
+      transition: opacity 0.15s;
+    }
+    .btn-primary:hover { opacity: 0.88; }
+    .btn-primary:disabled { opacity: 0.55; cursor: not-allowed; }
+    .btn-secondary {
+      width: 100%; padding: 0.65rem; border-radius: 10px;
+      background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.12);
+      color: inherit; font-size: 0.875rem; font-weight: 500; cursor: pointer;
+      transition: border-color 0.15s;
+    }
+    [data-theme="light"] .btn-secondary { background: rgba(0,0,0,0.04); border-color: rgba(0,0,0,0.12); }
+    .btn-secondary:hover { border-color: #6366f1; }
+    .btn-secondary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* ── Results ── */
+    .result-section { margin-top: 1.25rem; }
+    .result-section-title {
+      font-size: 0.78rem; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.05em; color: rgba(255,255,255,0.4);
+      margin-bottom: 0.75rem; padding-bottom: 0.5rem;
+      border-bottom: 1px solid rgba(255,255,255,0.07);
+    }
+    [data-theme="light"] .result-section-title { color: rgba(20,20,40,0.4); border-bottom-color: rgba(0,0,0,0.07); }
+
+    .kv-grid { display: grid; gap: 0.5rem; }
+    .kv-row {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      gap: 0.75rem; font-size: 0.83rem; padding: 0.45rem 0;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+    [data-theme="light"] .kv-row { border-bottom-color: rgba(0,0,0,0.05); }
+    .kv-row:last-child { border-bottom: none; }
+    .kv-label { color: rgba(255,255,255,0.5); flex-shrink: 0; }
+    [data-theme="light"] .kv-label { color: rgba(20,20,40,0.5); }
+    .kv-value { font-weight: 500; text-align: right; }
+
+    /* Risk bar */
+    .risk-bar {
+      height: 6px; border-radius: 3px;
+      background: rgba(255,255,255,0.1); overflow: hidden; margin-top: 4px;
+    }
+    [data-theme="light"] .risk-bar { background: rgba(0,0,0,0.08); }
+    .risk-bar-fill { height: 100%; border-radius: 3px; transition: width 0.6s ease; }
+    .risk-bar-fill.low    { background: #10b981; }
+    .risk-bar-fill.medium { background: #f59e0b; }
+    .risk-bar-fill.high   { background: #ef4444; }
+
+    /* Badges */
+    .badge {
+      display: inline-block; padding: 2px 8px; border-radius: 20px;
+      font-size: 0.72rem; font-weight: 600;
+    }
+    .badge-genuine    { background: rgba(16,185,129,0.18); color: #10b981; }
+    .badge-suspicious { background: rgba(245,158,11,0.18); color: #f59e0b; }
+    .badge-fraud      { background: rgba(239,68,68,0.18);  color: #ef4444; }
+
+    /* ── Alerts ── */
+    .alert-info {
+      padding: 0.8rem 1rem; border-radius: 9px; font-size: 0.875rem;
+      background: rgba(99,102,241,0.1); border: 1px solid rgba(99,102,241,0.2);
+      color: rgba(255,255,255,0.75);
+    }
+    [data-theme="light"] .alert-info { background: rgba(99,102,241,0.07); color: rgba(20,20,40,0.7); }
+    .alert-danger {
+      padding: 0.8rem 1rem; border-radius: 9px; font-size: 0.875rem;
+      background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.2);
+      color: rgba(255,255,255,0.8);
+    }
+    .alert-success {
+      padding: 0.8rem 1rem; border-radius: 9px; font-size: 0.875rem;
+      background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.2);
+      color: rgba(255,255,255,0.8);
+    }
+
+    /* ── Skeleton / Spinner ── */
+    .skeleton {
+      background: linear-gradient(90deg, rgba(255,255,255,0.06) 25%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.06) 75%);
+      background-size: 200% 100%; animation: shimmer 1.4s infinite;
+    }
+    [data-theme="light"] .skeleton {
+      background: linear-gradient(90deg, rgba(0,0,0,0.06) 25%, rgba(0,0,0,0.1) 50%, rgba(0,0,0,0.06) 75%);
+      background-size: 200% 100%;
+    }
+    @keyframes shimmer { to { background-position: -200% 0; } }
+    .spinner {
+      display: inline-block; width: 14px; height: 14px;
+      border: 2px solid rgba(255,255,255,0.25); border-top-color: #fff;
+      border-radius: 50%; animation: spin 0.65s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── My Claims table ── */
+    .table-wrap { overflow-x: auto; }
+    .data-table { width: 100%; border-collapse: collapse; font-size: 0.83rem; }
+    .data-table th {
+      text-align: left; padding: 0.6rem 0.75rem; font-weight: 600;
+      font-size: 0.75rem; color: rgba(255,255,255,0.5);
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    [data-theme="light"] .data-table th { color: rgba(20,20,40,0.5); border-bottom-color: rgba(0,0,0,0.08); }
+    .data-table td {
+      padding: 0.7rem 0.75rem;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      vertical-align: middle;
+    }
+    [data-theme="light"] .data-table td { border-bottom-color: rgba(0,0,0,0.05); }
+    .badge-pending       { background: rgba(245,158,11,0.18); color: #f59e0b; }
+    .badge-approved      { background: rgba(16,185,129,0.18); color: #10b981; }
+    .badge-rejected      { background: rgba(239,68,68,0.18);  color: #ef4444; }
+    .badge-investigating { background: rgba(99,102,241,0.18); color: #a5b4fc; }
+    .skeleton-table { height: 160px; border-radius: 8px; }
+
+    /* ── Footer ── */
+    footer {
+      text-align: center; padding: 1.25rem;
+      font-size: 0.75rem; color: rgba(255,255,255,0.2);
+      border-top: 1px solid rgba(255,255,255,0.05);
+    }
+    [data-theme="light"] footer { color: rgba(20,20,40,0.3); border-top-color: rgba(0,0,0,0.06); }
+  </style>
+</head>
+<body data-requires-auth>
+
+  <!-- ── Navbar ── -->
+  <nav class="navbar">
+    <a href="dashboard.html" class="navbar-logo">
+      <span class="logo-mark">🛡</span>
+      InsureBot
+    </a>
+    <div class="navbar-links">
+      <a href="dashboard.html">Dashboard</a>
+      <a href="policy.html">Policies</a>
+      <a href="admin.html" data-admin-only hidden>Admin</a>
+    </div>
+    <div class="navbar-actions">
+      <button id="theme-toggle" aria-label="Toggle theme"></button>
+      <div class="navbar-user" data-auth-user hidden>
+        <div class="navbar-avatar" data-auth-initial></div>
+        <span data-auth-name style="font-size:0.875rem"></span>
+      </div>
+      <button class="logout-link" data-auth-logout hidden>Log out</button>
+      <a href="login.html" class="btn-ghost" data-auth-guest style="padding:0.4rem 0.9rem;border-radius:8px;border:1px solid rgba(255,255,255,0.15);text-decoration:none;font-size:0.875rem">Log in</a>
+    </div>
+  </nav>
+
+  <!-- ── Page ── -->
+  <main class="page-main">
+
+    <div class="page-header">
+      <h1>Claims</h1>
+      <p>Upload a damage photo to analyze it, then save your claim.</p>
+    </div>
+
+    <!-- Tabs -->
+    <div class="page-tabs">
+      <button class="page-tab active" data-tab="new-claim-panel">New Claim</button>
+      <button class="page-tab" data-tab="my-claims-panel">My Claims</button>
+    </div>
+
+    <!-- ── New Claim panel ── -->
+    <div id="new-claim-panel" class="tab-panel active">
+      <div class="claim-grid">
+
+        <!-- LEFT: Upload + form -->
+        <div style="display:flex;flex-direction:column;gap:1.25rem">
+
+          <!-- Image dropzone -->
+          <div class="card">
+            <div class="card-title">
+              <span class="icon" style="background:rgba(99,102,241,0.15);">📷</span>
+              Damage Photo
+            </div>
+
+            <div class="dropzone" id="dropzone">
+              <input type="file" id="claim-file" accept="image/*" aria-label="Select damage photo" />
+              <div class="dropzone-icon">🖼</div>
+              <div class="dropzone-text">Drop your photo here or click to browse</div>
+              <div class="dropzone-hint">JPG, PNG, WEBP · max 10 MB</div>
+            </div>
+            <div id="claim-preview">
+              <img id="claim-preview-img" src="" alt="Damage preview" />
+            </div>
+            <div id="claim-file-name"></div>
+          </div>
+
+          <!-- Analyze button (no form wrapper needed — JS reads the file input) -->
+          <form id="analyze-form">
+            <button type="submit" id="analyze-submit" class="btn-primary">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                   stroke-linecap="round" stroke-linejoin="round" width="15" height="15">
+                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              </svg>
+              Analyze Damage
+            </button>
+          </form>
+
+        </div>
+
+        <!-- RIGHT: Results + save form -->
+        <div style="display:flex;flex-direction:column;gap:1.25rem">
+
+          <!-- Analysis results (hidden until analyzed) -->
+          <section id="analyze-results" class="card" hidden>
+            <div class="card-title">
+              <span class="icon" style="background:rgba(16,185,129,0.15);">✅</span>
+              Analysis Result
+            </div>
+
+            <!-- Vision -->
+            <div class="result-section">
+              <div class="result-section-title">Damage Assessment</div>
+              <div class="kv-grid">
+                <div class="kv-row">
+                  <span class="kv-label">Claim type</span>
+                  <span class="kv-value" id="result-claim-type">—</span>
+                </div>
+                <div class="kv-row">
+                  <span class="kv-label">Severity</span>
+                  <span class="kv-value" id="result-severity">—</span>
+                </div>
+                <div class="kv-row">
+                  <span class="kv-label">Estimated amount</span>
+                  <span class="kv-value" id="result-amount">—</span>
+                </div>
+              </div>
+              <div id="result-vision-extra" style="margin-top:0.5rem"></div>
+            </div>
+
+            <!-- Fraud -->
+            <div class="result-section" style="margin-top:1.25rem">
+              <div class="result-section-title">Fraud Check</div>
+              <div class="kv-row" style="border-bottom:none">
+                <span class="kv-label">Label</span>
+                <span class="kv-value" id="result-fraud-label">—</span>
+              </div>
+              <div style="margin-top:0.5rem">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;font-size:0.8rem">
+                  <span style="color:rgba(255,255,255,0.5)">Risk score</span>
+                  <span id="result-risk-score" style="font-weight:600">—</span>
+                </div>
+                <div class="risk-bar">
+                  <div id="result-risk-fill" class="risk-bar-fill low" style="width:0%"></div>
+                </div>
+              </div>
+              <div id="result-fraud-extra" style="margin-top:0.5rem"></div>
+            </div>
+
+            <!-- Settlement -->
+            <div class="result-section" style="margin-top:1.25rem">
+              <div class="result-section-title">Settlement Prediction</div>
+              <div class="kv-grid">
+                <div class="kv-row">
+                  <span class="kv-label">Prediction</span>
+                  <span class="kv-value" id="result-settlement">—</span>
+                </div>
+                <div class="kv-row">
+                  <span class="kv-label">Confidence</span>
+                  <span class="kv-value" id="result-confidence">—</span>
+                </div>
+              </div>
+              <div id="result-settlement-extra" style="margin-top:0.5rem"></div>
+            </div>
+          </section>
+
+          <!-- Save claim form (hidden until analyzed) -->
+          <form id="save-claim-form" class="card" hidden>
+            <div class="card-title">
+              <span class="icon" style="background:rgba(245,158,11,0.15);">💾</span>
+              Save Claim
+            </div>
+
+            <div class="form-group">
+              <label for="sc-claim-type">Claim type</label>
+              <select id="sc-claim-type" name="claim_type">
+                <option value="car">Car</option>
+                <option value="house">House</option>
+                <option value="health">Health</option>
+                <option value="business">Business</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="sc-incident-date">Incident date</label>
+                <input type="date" id="sc-incident-date" name="incident_date" required />
+              </div>
+              <div class="form-group">
+                <label for="sc-severity">Severity</label>
+                <select id="sc-severity" name="damage_severity">
+                  <option value="minor">Minor</option>
+                  <option value="moderate">Moderate</option>
+                  <option value="severe">Severe</option>
+                  <option value="total_loss">Total Loss</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="sc-location">Location</label>
+              <input type="text" id="sc-location" name="location" placeholder="City, State" />
+            </div>
+
+            <div class="form-group">
+              <label for="sc-amount">Estimated amount (₹)</label>
+              <input type="text" id="sc-amount" name="amount_estimated" placeholder="e.g. ₹45,000 – ₹60,000" />
+            </div>
+
+            <div class="form-group">
+              <label for="sc-description">Description <span style="color:#ef4444">*</span></label>
+              <textarea id="sc-description" name="description" rows="3"
+                        placeholder="Describe what happened…" required></textarea>
+            </div>
+
+            <div class="form-group">
+              <label for="sc-parts">Affected parts</label>
+              <input type="text" id="sc-parts" name="affected_parts" placeholder="e.g. front bumper, left door" />
+            </div>
+
+            <!-- Hidden AI result fields -->
+            <input type="hidden" id="sc-fraud-score"  name="fraud_risk_score" />
+            <input type="hidden" id="sc-fraud-label"  name="fraud_label" />
+            <input type="hidden" id="sc-settlement"   name="settlement_predicted" />
+            <input type="hidden" id="sc-confidence"   name="settlement_confidence" />
+
+            <button type="submit" id="save-submit" class="btn-primary" style="margin-top:0.5rem">
+              Submit Claim
+            </button>
+          </form>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- ── My Claims panel ── -->
+    <div id="my-claims-panel" class="tab-panel">
+      <div id="my-claims-container">
+        <div class="skeleton skeleton-table"></div>
+      </div>
+    </div>
+
+  </main>
+
+  <footer>© 2026 InsureBot · Orbyxa</footer>
+  <div id="toast-container"></div>
+
+  <script src="js/api.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/theme.js"></script>
+  <script src="js/claims.js"></script>
+  <script src="js/chatbot-widget.js"></script>
+  <script>
+    // ── Tab switcher ──
+    const tabs   = document.querySelectorAll(".page-tab");
+    const panels = document.querySelectorAll(".tab-panel");
+    tabs.forEach(tab => {
+      tab.addEventListener("click", () => {
+        const target = tab.dataset.tab;
+        tabs.forEach(t => t.classList.toggle("active", t === tab));
+        panels.forEach(p => p.classList.toggle("active", p.id === target));
+      });
+    });
+
+    // ── Open My Claims if ?q= param present (from search) ──
+    document.addEventListener("DOMContentLoaded", () => {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("q")) {
+        document.querySelector('[data-tab="my-claims-panel"]')?.click();
+      }
+    });
+
+    // ── Image preview on file select ──
+    document.getElementById("claim-file")?.addEventListener("change", function () {
+      const file = this.files?.[0];
+      if (!file) return;
+      const preview  = document.getElementById("claim-preview");
+      const img      = document.getElementById("claim-preview-img");
+      const nameEl   = document.getElementById("claim-file-name");
+      const reader   = new FileReader();
+      reader.onload  = (e) => {
+        img.src = e.target.result;
+        preview.style.display = "block";
+      };
+      reader.readAsDataURL(file);
+      if (nameEl) nameEl.textContent = file.name;
+    });
+
+    // ── Drag-and-drop ──
+    const dropzone = document.getElementById("dropzone");
+    if (dropzone) {
+      ["dragenter", "dragover"].forEach(ev =>
+        dropzone.addEventListener(ev, e => { e.preventDefault(); dropzone.classList.add("dragging"); })
+      );
+      ["dragleave", "drop"].forEach(ev =>
+        dropzone.addEventListener(ev, e => { e.preventDefault(); dropzone.classList.remove("dragging"); })
+      );
+      dropzone.addEventListener("drop", e => {
+        const file = e.dataTransfer?.files?.[0];
+        if (!file || !file.type.startsWith("image/")) return;
+        const input = document.getElementById("claim-file");
+        // Set file on the input via DataTransfer
+        const dt = new DataTransfer();
+        dt.items.add(file);
+        input.files = dt.files;
+        input.dispatchEvent(new Event("change"));
+      });
+    }
+  </script>
+</body>
+</html>

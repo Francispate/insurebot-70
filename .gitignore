@@ -1,0 +1,26 @@
+﻿# Python
+venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# DB
+backend/app/db/database.db
+*.db
+
+# Env & secrets
+.env
+.env.local
+*.env
+
+# Uploads
+backend/uploads/*
+!backend/uploads/.gitkeep
+
+# Models
+backend/models/*.pkl
+
+# OS/editor
+.DS_Store
+.vscode/
+*.log
