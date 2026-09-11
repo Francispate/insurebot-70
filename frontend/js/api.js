@@ -10,7 +10,7 @@
 
   // ---------- Config ----------
   // Change this to your deployed backend URL when not running locally.
-  const BASE_URL = window.INSUREBOT_API_BASE || "http://localhost:8000";
+  const BASE_URL = window.INSUREBOT_API_BASE || "https://insurebot-backend-70.onrender.com";
 
   const TOKEN_KEY = "insurebot_token";
   const USER_KEY = "insurebot_user";
