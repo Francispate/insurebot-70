@@ -1,6 +1,6 @@
 """
 backend/app/ai/vision.py
-Analyzes damage images using Google Gemini API (google-generativeai library)
+Analyzes damage images using Google Gemini API (google-genai library)
 """
 
 import os
@@ -13,7 +13,6 @@ load_dotenv()
 
 
 def analyze_damage_image(image_bytes: bytes) -> dict:
-    # Read API key at call time so Render env vars are always picked up
     api_key = os.getenv("GOOGLE_AI_API_KEY", "").strip()
 
     if not api_key:
@@ -21,10 +20,11 @@ def analyze_damage_image(image_bytes: bytes) -> dict:
         return _fallback_response()
 
     try:
-        import google.generativeai as genai
+        from google import genai
+        from google.genai import types
 
         print("[Vision AI] Connecting to Gemini...")
-        genai.configure(api_key=api_key)
+        client = genai.Client(api_key=api_key)
 
         prompt = """You are an insurance damage assessment AI for an Indian insurance platform.
 Analyze this damage image and respond ONLY with a valid JSON object.
@@ -47,7 +47,6 @@ Rules:
 - rejection_risks: list reasons this claim might be rejected
 """
 
-        # Detect mime type from image header bytes
         if image_bytes[:3] == b'\xff\xd8\xff':
             mime_type = "image/jpeg"
         elif image_bytes[:8] == b'\x89PNG\r\n\x1a\n':
@@ -57,20 +56,20 @@ Rules:
         else:
             mime_type = "image/jpeg"
 
-        print(f"[Vision AI] Sending image ({mime_type}) to Gemini 1.5 Flash...")
+        print(f"[Vision AI] Sending image ({mime_type}) to Gemini 2.0 Flash...")
 
-        model = genai.GenerativeModel("gemini-1.5-flash")
-        response = model.generate_content([
-            {"mime_type": mime_type, "data": image_bytes},
-            prompt
-        ])
+        response = client.models.generate_content(
+            model="gemini-2.0-flash",
+            contents=[
+                types.Part.from_bytes(data=image_bytes, mime_type=mime_type),
+                prompt
+            ]
+        )
 
         print("[Vision AI] Response received, parsing...")
-
         raw = response.text.strip()
         print(f"[Vision AI] Raw response: {raw[:200]}")
 
-        # Strip markdown fences if present
         if raw.startswith("```"):
             raw = raw.split("```")[1]
             if raw.startswith("json"):
