@@ -11,11 +11,12 @@ warnings.filterwarnings("ignore")
 from dotenv import load_dotenv
 load_dotenv()
 
-GOOGLE_AI_API_KEY = os.getenv("GOOGLE_AI_API_KEY", "")
-
 
 def analyze_damage_image(image_bytes: bytes) -> dict:
-    if not GOOGLE_AI_API_KEY:
+    # Read API key at call time (not module load time) so Render env vars are picked up
+    api_key = os.getenv("GOOGLE_AI_API_KEY", "").strip()
+
+    if not api_key:
         print("[Vision AI] No API key found, using fallback")
         return _fallback_response()
 
@@ -25,7 +26,7 @@ def analyze_damage_image(image_bytes: bytes) -> dict:
 
         print("[Vision AI] Connecting to Gemini...")
 
-        client = genai.Client(api_key=GOOGLE_AI_API_KEY)
+        client = genai.Client(api_key=api_key)
 
         prompt = """You are an insurance damage assessment AI for an Indian insurance platform.
 Analyze this damage image and respond ONLY with a valid JSON object.
@@ -48,8 +49,6 @@ Rules:
 - rejection_risks: list reasons this claim might be rejected
 """
 
-        print("[Vision AI] Sending image to Gemini 3.6 Flash...")
-
         # Detect mime type from image header bytes
         if image_bytes[:3] == b'\xff\xd8\xff':
             mime_type = "image/jpeg"
@@ -58,12 +57,12 @@ Rules:
         elif image_bytes[:4] == b'RIFF' and image_bytes[8:12] == b'WEBP':
             mime_type = "image/webp"
         else:
-            mime_type = "image/jpeg"  # default fallback
+            mime_type = "image/jpeg"
 
-        print(f"[Vision AI] Detected mime type: {mime_type}")
+        print(f"[Vision AI] Sending image ({mime_type}) to Gemini 2.0 Flash...")
 
         response = client.models.generate_content(
-            model="gemini-1.5-flash",
+            model="gemini-2.0-flash",
             contents=[
                 types.Part.from_bytes(data=image_bytes, mime_type=mime_type),
                 prompt
