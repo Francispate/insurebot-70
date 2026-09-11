@@ -1,6 +1,6 @@
 """
 backend/app/ai/vision.py
-Analyzes damage images using Google Gemini API
+Analyzes damage images using Google Gemini API (google-generativeai library)
 """
 
 import os
@@ -13,7 +13,7 @@ load_dotenv()
 
 
 def analyze_damage_image(image_bytes: bytes) -> dict:
-    # Read API key at call time (not module load time) so Render env vars are picked up
+    # Read API key at call time so Render env vars are always picked up
     api_key = os.getenv("GOOGLE_AI_API_KEY", "").strip()
 
     if not api_key:
@@ -21,12 +21,10 @@ def analyze_damage_image(image_bytes: bytes) -> dict:
         return _fallback_response()
 
     try:
-        from google import genai
-        from google.genai import types
+        import google.generativeai as genai
 
         print("[Vision AI] Connecting to Gemini...")
-
-        client = genai.Client(api_key=api_key)
+        genai.configure(api_key=api_key)
 
         prompt = """You are an insurance damage assessment AI for an Indian insurance platform.
 Analyze this damage image and respond ONLY with a valid JSON object.
@@ -59,15 +57,13 @@ Rules:
         else:
             mime_type = "image/jpeg"
 
-        print(f"[Vision AI] Sending image ({mime_type}) to Gemini 2.0 Flash...")
+        print(f"[Vision AI] Sending image ({mime_type}) to Gemini 1.5 Flash...")
 
-        response = client.models.generate_content(
-            model="gemini-2.0-flash",
-            contents=[
-                types.Part.from_bytes(data=image_bytes, mime_type=mime_type),
-                prompt
-            ]
-        )
+        model = genai.GenerativeModel("gemini-1.5-flash")
+        response = model.generate_content([
+            {"mime_type": mime_type, "data": image_bytes},
+            prompt
+        ])
 
         print("[Vision AI] Response received, parsing...")
 
