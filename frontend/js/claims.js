@@ -341,9 +341,11 @@
     setText("result-risk-score", `${Math.round(score)} / 100`);
 
     // ── Settlement ──
-    setText("result-settlement",  settlement.prediction || settlement.settlement_predicted || "—");
-    setText("result-confidence",  settlement.confidence !== undefined
-      ? `${Math.round(parseFloat(settlement.confidence) * 100)}%`
+    // Backend returns: predicted_settlement + settlement_confidence (0-100 scale)
+    setText("result-settlement", settlement.predicted_settlement || settlement.prediction || settlement.settlement_predicted || "—");
+    const rawConf = settlement.settlement_confidence ?? settlement.confidence;
+    setText("result-confidence", rawConf !== undefined && rawConf !== null
+      ? `${Math.round(parseFloat(rawConf))}%`   // backend sends 72.0 (already %), not 0-1
       : "—"
     );
 
@@ -365,7 +367,8 @@
     const settlementExtra = document.getElementById("result-settlement-extra");
     if (settlementExtra) {
       settlementExtra.innerHTML = renderKVPairs(settlement, [
-        "prediction", "settlement_predicted", "confidence",
+        "prediction", "settlement_predicted", "predicted_settlement",
+        "confidence", "settlement_confidence",
       ]);
     }
   }
@@ -414,11 +417,15 @@
     const today = new Date().toISOString().split("T")[0];
     setVal("sc-incident-date", today);
 
-    // Hidden fields
+    // affected_parts comes back as an array — join to comma string for the text input
+    const parts = vision.affected_parts;
+    setVal("sc-parts", Array.isArray(parts) ? parts.join(", ") : parts || "");
+
+    // Hidden fields — use actual backend key names
     setVal("sc-fraud-score", fraud.fraud_risk_score ?? "");
     setVal("sc-fraud-label", fraud.fraud_label || "");
-    setVal("sc-settlement",  settlement.prediction || settlement.settlement_predicted || "");
-    setVal("sc-confidence",  settlement.confidence ?? "");
+    setVal("sc-settlement",  settlement.predicted_settlement || settlement.prediction || settlement.settlement_predicted || "");
+    setVal("sc-confidence",  settlement.settlement_confidence ?? settlement.confidence ?? "");
   }
 
   // ─────────────────────────────────────────
