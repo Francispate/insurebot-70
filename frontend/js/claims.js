@@ -153,7 +153,13 @@
       .filter(([k]) => !skipKeys.includes(k))
       .map(([k, v]) => {
         const label = k.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
-        const val = typeof v === "object" ? JSON.stringify(v) : v ?? "—";
+        if (Array.isArray(v)) {
+          const items = v.length
+            ? v.map(item => `<li style="margin:2px 0">${item}</li>`).join("")
+            : "—";
+          return `<div class="kv-row" style="flex-direction:column;align-items:flex-start;gap:4px"><span class="kv-label">${label}</span><ul style="margin:2px 0 0 1.2rem;padding:0;font-weight:500">${items}</ul></div>`;
+        }
+        const val = typeof v === "boolean" ? (v ? "Yes" : "No") : v ?? "—";
         return `<div class="kv-row"><span class="kv-label">${label}</span><span class="kv-value">${val}</span></div>`;
       })
       .join("");
@@ -175,11 +181,6 @@
 
     // State persisted between analyze and save steps
     let lastAnalysis = null;
-
-    // Warm up the backend immediately so it's ready when the user hits Analyze.
-    // Render free-tier instances spin down after inactivity; this fires a cheap
-    // GET /health in the background so the real request doesn't time out.
-    if (typeof API.ping === "function") API.ping();
 
     // ── Step 1: Analyze ──
     form.addEventListener("submit", async (e) => {
