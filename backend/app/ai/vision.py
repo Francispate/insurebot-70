@@ -5,27 +5,27 @@ Analyzes damage images using Google Gemini API
 
 import os
 import json
-import base64
 import warnings
 warnings.filterwarnings("ignore")
 
 from dotenv import load_dotenv
 load_dotenv()
 
-GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY", "")
+GOOGLE_AI_API_KEY = os.getenv("GOOGLE_AI_API_KEY", "")
 
 
 def analyze_damage_image(image_bytes: bytes) -> dict:
-    if not GOOGLE_API_KEY:
+    if not GOOGLE_AI_API_KEY:
         print("[Vision AI] No API key found, using fallback")
         return _fallback_response()
 
     try:
-        import google.generativeai as genai
+        from google import genai
+        from google.genai import types
 
         print("[Vision AI] Connecting to Gemini...")
-        genai.configure(api_key=GOOGLE_API_KEY)
-        model = genai.GenerativeModel("gemini-1.5-flash")
+
+        client = genai.Client(api_key=GOOGLE_AI_API_KEY)
 
         prompt = """You are an insurance damage assessment AI for an Indian insurance platform.
 Analyze this damage image and respond ONLY with a valid JSON object.
@@ -48,17 +48,34 @@ Rules:
 - rejection_risks: list reasons this claim might be rejected
 """
 
-        import PIL.Image
-        import io
-        image = PIL.Image.open(io.BytesIO(image_bytes))
+        print("[Vision AI] Sending image to Gemini 3.6 Flash...")
 
-        print("[Vision AI] Sending image to Gemini 1.5 Flash...")
-        response = model.generate_content([prompt, image])
+        # Detect mime type from image header bytes
+        if image_bytes[:3] == b'\xff\xd8\xff':
+            mime_type = "image/jpeg"
+        elif image_bytes[:8] == b'\x89PNG\r\n\x1a\n':
+            mime_type = "image/png"
+        elif image_bytes[:4] == b'RIFF' and image_bytes[8:12] == b'WEBP':
+            mime_type = "image/webp"
+        else:
+            mime_type = "image/jpeg"  # default fallback
+
+        print(f"[Vision AI] Detected mime type: {mime_type}")
+
+        response = client.models.generate_content(
+            model="gemini-1.5-flash",
+            contents=[
+                types.Part.from_bytes(data=image_bytes, mime_type=mime_type),
+                prompt
+            ]
+        )
 
         print("[Vision AI] Response received, parsing...")
+
         raw = response.text.strip()
         print(f"[Vision AI] Raw response: {raw[:200]}")
 
+        # Strip markdown fences if present
         if raw.startswith("```"):
             raw = raw.split("```")[1]
             if raw.startswith("json"):
