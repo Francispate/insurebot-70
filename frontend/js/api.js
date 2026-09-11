@@ -10,7 +10,7 @@
 
   // ---------- Config ----------
   // Change this to your deployed backend URL when not running locally.
-  const BASE_URL = window.INSUREBOT_API_BASE || "https://insurebot-backend-70.onrender.com";
+  const BASE_URL = window.INSUREBOT_API_BASE || "http://localhost:8000";
 
   const TOKEN_KEY = "insurebot_token";
   const USER_KEY = "insurebot_user";
@@ -256,6 +256,16 @@
           query: sessionId ? { session_id: sessionId } : null,
         });
       },
+    },
+
+    // ---- Health / wake-up ----
+    /**
+     * Pings the backend health endpoint to warm up a cold Render instance.
+     * Call this on page load for pages that will hit the API soon.
+     * Swallows all errors — it's best-effort only.
+     */
+    ping() {
+      return fetch(BASE_URL + "/health", { method: "GET" }).catch(() => {});
     },
 
     // ---- Admin ----

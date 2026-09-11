@@ -176,12 +176,23 @@
     // State persisted between analyze and save steps
     let lastAnalysis = null;
 
+    // Warm up the backend immediately so it's ready when the user hits Analyze.
+    // Render free-tier instances spin down after inactivity; this fires a cheap
+    // GET /health in the background so the real request doesn't time out.
+    if (typeof API.ping === "function") API.ping();
+
     // ── Step 1: Analyze ──
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
       const file = fileInput?.files?.[0];
       if (!file) {
         toast("Please select an image file.", "warning");
+        return;
+      }
+
+      // Basic client-side size guard (10 MB)
+      if (file.size > 10 * 1024 * 1024) {
+        toast("Image too large — please use a file under 10 MB.", "warning");
         return;
       }
 
@@ -192,21 +203,48 @@
       try {
         const res = await API.claims.analyze(file);
 
-        if (!res || !res.success) {
-          toast("Analysis returned an unexpected response.", "error");
+        // Normalise response — backend may return success flag or just the data
+        const data = res && typeof res === "object" ? res : null;
+        if (!data) {
+          toast("Analysis returned an empty response. Please try again.", "error");
           return;
         }
 
-        lastAnalysis = res;
-        renderAnalysisResults(res);
+        // Accept both { success: true, vision, fraud, settlement } and
+        // flat { vision, fraud, settlement } shapes from the backend
+        const hasStructure = data.vision || data.fraud || data.settlement;
+        if (!hasStructure) {
+          console.error("[InsureBot] Unexpected analyze response shape:", data);
+          toast("Analysis returned an unexpected response — check the console for details.", "error");
+          return;
+        }
+
+        lastAnalysis = data;
+        renderAnalysisResults(data);
 
         if (resultsEl) resultsEl.hidden = false;
         if (saveFormEl) {
-          prefillSaveForm(res);
+          prefillSaveForm(data);
           saveFormEl.hidden = false;
         }
       } catch (err) {
-        toast(err.message || "Analysis failed.", "error");
+        // Distinguish network/CORS failures from API errors for clearer feedback
+        if (err.isNetworkError) {
+          toast(
+            "Could not reach the server — it may be waking up. Wait 30 seconds and try again.",
+            "error",
+            8000
+          );
+        } else if (err.status === 0 || !err.status) {
+          toast(
+            "Request was blocked (possible CORS issue). Check browser console for details.",
+            "error",
+            8000
+          );
+        } else {
+          toast(`Analysis failed (${err.status || "unknown"}): ${err.message}`, "error");
+        }
+        console.error("[InsureBot] analyze error:", err);
       } finally {
         setLoading(submitBtn, false);
       }
@@ -333,6 +371,34 @@
   }
 
   /**
+   * Maps whatever the backend returns for claim_type to one of the
+   * <select> option values: car | house | health | business | other
+   */
+  function normaliseClaimType(raw) {
+    if (!raw) return "";
+    const t = String(raw).toLowerCase();
+    if (t.includes("car") || t.includes("vehicle") || t.includes("auto") || t.includes("motor")) return "car";
+    if (t.includes("house") || t.includes("home") || t.includes("property") || t.includes("building")) return "house";
+    if (t.includes("health") || t.includes("medical") || t.includes("injury")) return "health";
+    if (t.includes("business") || t.includes("commercial")) return "business";
+    return "other";
+  }
+
+  /**
+   * Maps whatever the backend returns for damage_severity to one of:
+   * minor | moderate | severe | total_loss
+   */
+  function normaliseSeverity(raw) {
+    if (!raw) return "";
+    const s = String(raw).toLowerCase();
+    if (s.includes("total") || s.includes("loss") || s.includes("write")) return "total_loss";
+    if (s.includes("severe") || s.includes("major") || s.includes("critical")) return "severe";
+    if (s.includes("moderate") || s.includes("medium") || s.includes("significant")) return "moderate";
+    if (s.includes("minor") || s.includes("light") || s.includes("small")) return "minor";
+    return "";
+  }
+
+  /**
    * Pre-fills the save form using the analyze result.
    */
   function prefillSaveForm(res) {
@@ -340,8 +406,8 @@
     const fraud      = res.fraud      || {};
     const settlement = res.settlement || {};
 
-    setVal("sc-claim-type", vision.claim_type || "");
-    setVal("sc-severity",   vision.damage_severity || "");
+    setVal("sc-claim-type", normaliseClaimType(vision.claim_type));
+    setVal("sc-severity",   normaliseSeverity(vision.damage_severity));
     setVal("sc-amount",     vision.estimated_amount || "");
 
     // Today as default incident date
