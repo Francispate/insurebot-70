@@ -56,10 +56,10 @@ Rules:
         else:
             mime_type = "image/jpeg"
 
-        print(f"[Vision AI] Sending image ({mime_type}) to Gemini 2.0 Flash...")
+        print(f"[Vision AI] Sending image ({mime_type}) to Gemini 3.6 Flash...")
 
         response = client.models.generate_content(
-            model="gemini-2.0-flash",
+            model="gemini-3.6-flash",
             contents=[
                 types.Part.from_bytes(data=image_bytes, mime_type=mime_type),
                 prompt
